@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="arm64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Codify.Tests/Codify.Tests.csproj" />
+  <Project Path="Codify/Codify.csproj" Id="0ce33667-6fb1-4d5c-b376-26994bfbe080">
+    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+</Solution>
