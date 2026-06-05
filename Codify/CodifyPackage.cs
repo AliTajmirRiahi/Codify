@@ -26,7 +26,7 @@ namespace Codify
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(CodifyPackage.PackageGuidString)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(CodifyToolWindow))]
+    [ProvideToolWindow(typeof(Codify.UI.ToolWindows.CodifyToolWindow))]
     public sealed class CodifyPackage : AsyncPackage
     {
         /// <summary>
@@ -48,7 +48,7 @@ namespace Codify
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            await CodifyToolWindowCommand.InitializeAsync(this);
+            await Codify.UI.ToolWindows.CodifyToolWindowCommand.InitializeAsync(this);
         }
 
         #endregion

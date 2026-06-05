@@ -1,0 +1,107 @@
+﻿:root {
+    --vs-background: #1e1e1e;
+    --vs-foreground: #cccccc;
+    --vs-border: #3c3c3c;
+    --vs-input-bg: #252526;
+    --vs-button-bg: #333333;
+    --vs-button-hover: #454545;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--vs-background);
+    color: var(--vs-foreground);
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+}
+
+.chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.chat-header {
+    padding: 10px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--vs-border);
+    opacity: 0.8;
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.message {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+    .message.user {
+        align-self: flex-end;
+        background-color: var(--vs-button-bg);
+        color: white;
+    }
+
+    .message.ai {
+        align-self: flex-start;
+        background-color: var(--vs-input-bg);
+        border: 1px solid var(--vs-border);
+    }
+
+.input-container {
+    padding: 12px;
+    border-top: 1px solid var(--vs-border);
+}
+
+.input-box-wrapper {
+    background-color: var(--vs-input-bg);
+    border: 1px solid var(--vs-border);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+textarea {
+    background: transparent;
+    border: none;
+    resize: none;
+    outline: none;
+    color: var(--vs-foreground);
+    font-family: inherit;
+    font-size: 13px;
+    min-height: 20px;
+    max-height: 150px;
+}
+
+.input-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 5px;
+}
+
+#sendBtn {
+    background: var(--vs-button-bg);
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+    #sendBtn:hover {
+        background: var(--vs-button-hover);
+    }
