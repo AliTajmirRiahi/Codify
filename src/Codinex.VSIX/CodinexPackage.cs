@@ -101,8 +101,6 @@ namespace Codinex.VSIX
             // 3. Perform Async Initializations
             // Since some services need to load files from disk, we do it here.
             await InitializeCoreServicesAsync();
-
-            Debug.WriteLine("[Codinex] DI Container & Package Initialized.");
         }
         /// <summary>
         /// Handles package initialization errors safely.

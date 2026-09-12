@@ -97,7 +97,9 @@ namespace Codinex.UI.ToolWindows
 
             if (_isDisposed) return;
 
+#if DEBUG
             WebView.CoreWebView2.OpenDevToolsWindow();
+#endif
 
             // Get services from our DI Container
             var webViewClient = _serviceProvider.GetRequiredService<IWebViewClient>();
