@@ -262,22 +262,27 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
                 {
                     var aiProviderDto = _payloadBinder.Bind<AiProviderDto>(request.Payload);
 
+                    ProviderSettingsUpdateResult result;
+
                     try
                     {
-                        var result = await _providerManager.UpdateSettingsAsync(aiProviderDto);
-
-                        if (!result.Success)
-                        {
-                            await SendChangeModelSettingRejectedAsync(result.Message, result.IsAvailable);
-                            return;
-                        }
-
-                        await SendChangeModelSettingApprovedAsync(result.Message);
+                        result = await _providerManager.UpdateSettingsAsync(aiProviderDto);
                     }
                     catch (Exception ex)
                     {
                         await SendChangeModelSettingRejectedAsync(ex.Message, false);
+                        return;
                     }
+
+                    if (!result.Success)
+                    {
+                        await SendChangeModelSettingRejectedAsync(result.Message, result.IsAvailable);
+                        return;
+                    }
+
+                    await EnsureChatSessionForActiveProviderAsync();
+
+                    await SendChangeModelSettingApprovedAsync(result.Message);
 
                     return;
                 }
@@ -285,22 +290,27 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
                 {
                     var addProviderDto = _payloadBinder.Bind<AddCustomProviderDto>(request.Payload);
 
+                    ProviderSettingsUpdateResult result;
+
                     try
                     {
-                        var result = await _providerManager.AddCustomProviderAsync(addProviderDto);
-
-                        if (!result.Success)
-                        {
-                            await SendCustomProviderAddRejectedAsync(result.Message);
-                            return;
-                        }
-
-                        await SendCustomProviderAddedAsync(result.Message);
+                        result = await _providerManager.AddCustomProviderAsync(addProviderDto);
                     }
                     catch (Exception ex)
                     {
                         await SendCustomProviderAddRejectedAsync(ex.Message);
+                        return;
                     }
+
+                    if (!result.Success)
+                    {
+                        await SendCustomProviderAddRejectedAsync(result.Message);
+                        return;
+                    }
+
+                    await EnsureChatSessionForActiveProviderAsync();
+
+                    await SendCustomProviderAddedAsync(result.Message);
 
                     return;
                 }
@@ -743,6 +753,8 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
 
         var cancellationToken = _generationCancellation.Token;
 
+        await EnsureChatSessionForActiveProviderAsync();
+
         _sendChatMessageUseCase = _chatUseCaseFactory.Create();
 
         var payload = _payloadBinder.Bind<ChatMessageBuildRequest>(request.Payload);
@@ -902,6 +914,45 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
     }
 
 
+    /// <summary>
+    /// Creates the chat session the first time a provider becomes usable.
+    /// </summary>
+    /// <remarks>On a fresh install the Ready handler runs before any provider is configured, so it
+    /// leaves <see cref="ChatSessionService.ActiveSession"/> null. Without this, the first message sent
+    /// after the user saves provider details fails with "No active chat session".</remarks>
+    private async Task EnsureChatSessionForActiveProviderAsync()
+    {
+        if (_sessionService.ActiveSession != null)
+            return;
+
+        if (_providerManager.ActiveProvider == null || _providerManager.ActiveModel == null)
+            return;
+
+        await _sessionService.InitializeAsync();
+    }
+
+    /// <summary>
+    /// Builds the chat payload for provider-configuration replies, so a session created by
+    /// <see cref="EnsureChatSessionForActiveProviderAsync"/> reaches a UI that started with no chats.
+    /// Returns null when no session is active.
+    /// </summary>
+    private async Task<object> BuildChatsPayloadAsync()
+    {
+        if (_sessionService.ActiveSession == null)
+            return null;
+
+        var chatListTask = _chatManager.GetAllChatsAsync();
+        var currentChatTask = _chatManager.LoadChatAsync(_sessionService.ActiveSession.SessionId);
+
+        await Task.WhenAll(chatListTask, currentChatTask);
+
+        return new
+        {
+            ChatList = chatListTask.Result,
+            Current = currentChatTask.Result
+        };
+    }
+
     public async Task SendChangeModelSettingApprovedAsync(string messageText = null)
     {
         var message = new WebViewMessageResponse()
@@ -915,6 +966,7 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
                     AvailableProviders = _providerManager.Providers,
                     Current = _providerManager.ActiveProvider
                 },
+                Chats = await BuildChatsPayloadAsync(),
             },
             Timestamp = DateTime.Now
         };
@@ -956,6 +1008,7 @@ public sealed class WebViewMessageRouter : IWebViewMessageRouter
                     AvailableProviders = _providerManager.Providers,
                     Current = _providerManager.ActiveProvider
                 },
+                Chats = await BuildChatsPayloadAsync(),
             },
             Timestamp = DateTime.Now
         };

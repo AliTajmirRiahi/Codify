@@ -187,6 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
             manageModelsController.clearSettingsError();
             manageModelsController.closeProviderSettings();
             chatController.renderCurrentProvider();
+
+            // First run only: the backend creates the first session when the provider is saved,
+            // and the UI has no chat to show until this payload arrives. Guarded on currentChat so
+            // a later settings save never clears the conversation on screen.
+            if (!getState().currentChat && getChatsPayload(payload)?.current) {
+                applyChatsPayload(payload);
+                chatController.navigateToChat();
+            }
         },
         onChangeModelSettingRejected: (payload) => {
             const message = payload.message || payload.Message || 'Settings could not be saved.';
@@ -350,6 +358,14 @@ document.addEventListener('DOMContentLoaded', () => {
             manageModelsController.clearSettingsError();
             addProviderController.handleProviderAdded();
             chatController.renderCurrentProvider();
+
+            // First run only: the backend creates the first session when the provider is saved,
+            // and the UI has no chat to show until this payload arrives. Guarded on currentChat so
+            // a later settings save never clears the conversation on screen.
+            if (!getState().currentChat && getChatsPayload(payload)?.current) {
+                applyChatsPayload(payload);
+                chatController.navigateToChat();
+            }
         },
         onCustomProviderAddRejected: (payload) => {
             const message = payload.message || payload.Message || 'Provider could not be added.';
